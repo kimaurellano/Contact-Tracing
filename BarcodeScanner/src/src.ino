@@ -29,6 +29,7 @@ class KbdRptParser : public KeyboardReportParser {
 KbdRptParser Prs;
 boolean isCodeScanned = false;
 boolean isBodyScanning = false;
+boolean startRead = false;
 char data[256];
 
 // avoid missing first character
@@ -54,26 +55,53 @@ void KbdRptParser::OnKeyPressed(uint8_t key) {
 void setup() {
   // Need to be initialize first before altSoftSerial
   Usb.Init();
-  
+
   Serial.begin(9600);
   altSerial.begin(38400);
-  
+
   Hid.SetReportParser(0, (HIDReportParser*)&Prs);
 }
 
 void loop() {
-    Usb.Task();
-    
-    if(!isCodeScanned){
-      return;
-    }
-    
-    altSerial.print("QR:");
-    altSerial.println(data);
+  Usb.Task();
+
+  if (isCodeScanned) {
+    Serial.print("QR:");
     Serial.println(data);
-  
+    altSerial.println("proceed");
+    
     // We do not need anymore of the data. Just reset it states
     memset(data, 0, sizeof data);
-  
+
+    // Do not proceed until software response
+    while (!Serial.available());
+    String response = Serial.readString();
+    Serial.println(response);
+
+    // Send response to mega
+    altSerial.print(response);
+
     isCodeScanned = !isCodeScanned;
+  }
+
+  // all data from mega will go directly to software
+  if (altSerial.available() && !isCodeScanned) {
+    char c = altSerial.read();
+
+    if ((byte)c == 13 || (byte)c == 10) {
+      Serial.println("reading...");
+      data[idx] = '\0';
+      startRead = true;
+      return;
+    }
+
+    data[idx++] = c;
+  }
+
+  if (startRead) {
+    Serial.println(data);
+    data[0] = '\0';
+    idx = 0;
+    startRead = !startRead;
+  }
 }
