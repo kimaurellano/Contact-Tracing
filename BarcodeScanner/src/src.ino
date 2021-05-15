@@ -68,10 +68,10 @@ void loop() {
   if (isCodeScanned) {
     Serial.print("QR:");
     Serial.println(data);
+    data[0] = '\0';
+    idx = 0;
+
     altSerial.println("proceed");
-    
-    // We do not need anymore of the data. Just reset it states
-    memset(data, 0, sizeof data);
 
     // Do not proceed until software response
     while (!Serial.available());
@@ -86,22 +86,7 @@ void loop() {
 
   // all data from mega will go directly to software
   if (altSerial.available() && !isCodeScanned) {
-    char c = altSerial.read();
-
-    if ((byte)c == 13 || (byte)c == 10) {
-      Serial.println("reading...");
-      data[idx] = '\0';
-      startRead = true;
-      return;
-    }
-
-    data[idx++] = c;
-  }
-
-  if (startRead) {
-    Serial.println(data);
-    data[0] = '\0';
-    idx = 0;
-    startRead = !startRead;
+    Serial.print("string attempt:");
+    Serial.println(altSerial.readString());
   }
 }
