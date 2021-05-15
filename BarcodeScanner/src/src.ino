@@ -46,6 +46,7 @@ void KbdRptParser::OnKeyPressed(uint8_t key) {
     data[idx] = '\0';
     idx = 0;
     isCodeScanned = true;
+    Serial.println("Scanned");
   }
   data[idx++] = (char)key;
 }
@@ -62,8 +63,6 @@ void setup() {
 
 void loop() {
     Usb.Task();
-
-    Serial.println(altSerial.readString());
     
     if(!isCodeScanned){
       return;

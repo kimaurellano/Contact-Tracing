@@ -37,119 +37,137 @@ void setup() {
   Serial.begin(9600);
   // For arduino uno communication
   altSerial.begin(38400);
-  
-  // put your setup code here, to run once:
-  pinMode(yes, INPUT);
-  pinMode(no, INPUT);
-  pinMode(ir, INPUT);
-  display.setBrightness(7);
-  mlx.begin();
-  display.clear();
-  delay(1000);
 
-  // Signal the software of a successful connection
-  delay(2500);
+  // put your setup code here, to run once:
+  //  pinMode(yes, INPUT);
+  //  pinMode(no, INPUT);
+  //  pinMode(ir, INPUT);
+  //  display.setBrightness(7);
+  //  mlx.begin();
+  //  display.clear();
+  //  delay(1000);
+  //
+  //  // Signal the software of a successful connection
+  //  delay(2500);
   Serial.print("start");
 }
 
 char data[256];
 int idx = 0;
-boolean startReading = false;
+boolean startRead = false;
 void loop() {
   if (altSerial.available()) {
+    // .read() required
     char c = altSerial.read();
-    if(c == 'Q'){
-      startReading = true;
-      data[idx++] = c;
+//    Serial.print("per char:");
+//    Serial.print(c);
+//    Serial.println((byte)c);
+
+    if ((byte)c == 13 || (byte)c == 10) {
+      Serial.println("reading...");
+      data[idx] = '\0';
+      startRead = true;
+      return;
     }
 
-    if(startReading){
-      data[idx++] = c;
-      if(c == '\n'){
-        data[idx] = '\0';
-        Serial.println(data);
-        idx = 0;
-        memset(data, 0, sizeof data);
-        startReading = false;
-      }
-    }
+    data[idx++] = c;
   }
-  
-  if(isCodeScanned && !isBodyScanning) {
-    Serial.println("[1]");
-    // Send to software to parse
-    // QR:FirstName,LastName,Purok,ContactNumber,Address,EContact,EName
-    altSerial.print("QR:");
-    altSerial.println(unoData);
 
-    // BUG: not proceeding
-    // Wait for software response
-    while (true){
-      String appResponse = Serial.readString();
-      if(appResponse == "Not Registered"){
-        // Go back to scan wait
-        isCodeScanned = false;
-        return;
-      } else if(appResponse == "Registered") {
-        // Proceed to body scan
-        break;
-      }
-    }
-
-    // Allow back to start but then immediately proceed to body scan
-    isBodyScanning = true;
-    isCodeScanned = false;
-    return;
-
-  } else if(isBodyScanning && !isCodeScanned) {
-    Serial.println("[2]");
-    // naka-scan
-    if (digitalRead(ir) == LOW) {
-      double c = mlx.readObjectTempC()*100;
-      digitalWrite(led, HIGH);
-      delay(1000);
-      // Check for this tag in Serial
-      Serial.println();
-      Serial.print("TEMP:");
-      Serial.print(c);
-      Serial.println();
-      display.showNumberDecEx(c, false, 0b01000000, 4, 0);
-      delay(100);
-  
-      // c:temperature
-      if (c < 3800) {
-        digitalWrite(led, LOW);
-        cough();
-      } else if (c >= 3730) {
-        Serial.begin(9600);
-        Serial.print("HIGH TEMPERATURE, SCAN AGAIN");
-        digitalWrite(led, LOW);
-        lcd.begin(20, 4);
-        lcd.setCursor(2, 1);
-        lcd.print("HIGH TEMPERATURE");
-        lcd.setCursor(5, 2);
-        lcd.print("SCAN AGAIN");
-        //delay(1000);
-        tone(buzzer, 1000);
-        delay(1000);
-        noTone(buzzer);
-        display.clear();
-        delay(1000);
-        //sev();
-      }
-    }
-    if (digitalRead(ir) == HIGH) {
-      //cough();
-      //delay(500);
-      display.clear();
-      lcd.clear();
-      digitalWrite(led, LOW);
-    }
-    
-    // Allow back to start
-    isCodeScanned = false;
-    isBodyScanning = false;
+  if (startRead) {
+    Serial.print("ended:");
+    Serial.println(data);
+//    char* splittedValue = strtok(data, "_");
+//    Serial.print("Splitted value:");
+//    Serial.println(splittedValue);
+//    while (splittedValue != nullptr) {
+//      splittedValue = strtok(nullptr, "_");
+//      Serial.print("Splitted value:");
+//      Serial.print(splittedValue);
+//      Serial.println((byte)splittedValue);
+//      if (splittedValue == "proceed") {
+//        Serial.println("proceeding...");
+//      }
+//    }
+    data[0] = '\0';
+    idx = 0;
+    startRead = !startRead;
   }
+
+  //  if(isCodeScanned && !isBodyScanning) {
+  //    Serial.println("[1]");
+  //    // Send to software to parse
+  //    // QR:FirstName,LastName,Purok,ContactNumber,Address,EContact,EName
+  //    altSerial.print("QR:");
+  //    altSerial.println(unoData);
+  //
+  //    // BUG: not proceeding
+  //    // Wait for software response
+  //    while (true){
+  //      String appResponse = Serial.readString();
+  //      if(appResponse == "Not Registered"){
+  //        // Go back to scan wait
+  //        isCodeScanned = false;
+  //        return;
+  //      } else if(appResponse == "Registered") {
+  //        // Proceed to body scan
+  //        break;
+  //      }
+  //    }
+  //
+  //    // Allow back to start but then immediately proceed to body scan
+  //    isBodyScanning = true;
+  //    isCodeScanned = false;
+  //    return;
+  //
+  //  } else if(isBodyScanning && !isCodeScanned) {
+  //    Serial.println("[2]");
+  //    // naka-scan
+  //    if (digitalRead(ir) == LOW) {
+  //      double c = mlx.readObjectTempC()*100;
+  //      digitalWrite(led, HIGH);
+  //      delay(1000);
+  //      // Check for this tag in Serial
+  //      Serial.println();
+  //      Serial.print("TEMP:");
+  //      Serial.print(c);
+  //      Serial.println();
+  //      display.showNumberDecEx(c, false, 0b01000000, 4, 0);
+  //      delay(100);
+  //
+  //      // c:temperature
+  //      if (c < 3800) {
+  //        digitalWrite(led, LOW);
+  //        cough();
+  //      } else if (c >= 3730) {
+  //        Serial.begin(9600);
+  //        Serial.print("HIGH TEMPERATURE, SCAN AGAIN");
+  //        digitalWrite(led, LOW);
+  //        lcd.begin(20, 4);
+  //        lcd.setCursor(2, 1);
+  //        lcd.print("HIGH TEMPERATURE");
+  //        lcd.setCursor(5, 2);
+  //        lcd.print("SCAN AGAIN");
+  //        //delay(1000);
+  //        tone(buzzer, 1000);
+  //        delay(1000);
+  //        noTone(buzzer);
+  //        display.clear();
+  //        delay(1000);
+  //        //sev();
+  //      }
+  //    }
+  //    if (digitalRead(ir) == HIGH) {
+  //      //cough();
+  //      //delay(500);
+  //      display.clear();
+  //      lcd.clear();
+  //      digitalWrite(led, LOW);
+  //    }
+  //
+  //    // Allow back to start
+  //    isCodeScanned = false;
+  //    isBodyScanning = false;
+  //  }
 }
 
 void cough() {
@@ -162,12 +180,12 @@ void cough() {
   Serial.print("COUGH:");
   // Low means yes
   if (digitalRead(yes) == LOW) {
-    displayResponse("COUGH","YES");
+    displayResponse("COUGH", "YES");
     cold();
   }
 
   if (digitalRead(no) == LOW) {
-    displayResponse("COUGH","NO");
+    displayResponse("COUGH", "NO");
     cold();
   }
 }
@@ -179,11 +197,11 @@ void cold() {
 
   display.clear();
   if (digitalRead(yes) == LOW) {
-    displayResponse("COLD","YES");
+    displayResponse("COLD", "YES");
   }
 
   if (digitalRead(no) == LOW) {
-    displayResponse("COLD","NO");
+    displayResponse("COLD", "NO");
     sev();
   }
 }
