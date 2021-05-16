@@ -53,7 +53,7 @@ void KbdRptParser::OnKeyPressed(uint8_t key) {
       str += *(tempPtr + i);
     }
 
-    Serial.println("QR:" + str);
+    Serial.println(str);
 
     memset(temp, 0, sizeof temp);
     idx = 0;
@@ -78,30 +78,30 @@ void setup() {
 void loop() {
   Usb.Task();
 
-//  if (isCodeScanned) {
-////    char str[128];
-////    strcpy(str, "QR:");
-////    strcat(str, data);
-////    Serial.println(str);
-////    str[0] = '\0';
-////    data[0] = '\0';
-////    idx = 0;
-//    
-//    altSerial.println("proceed");
-//
-//    // Do not proceed until software response
-//    while (!Serial.available());
-//    String response = Serial.readString();
-//    Serial.println(response);
-//
-//    // Send response to mega
-//    altSerial.print(response);
-//
-//    isCodeScanned = !isCodeScanned;
-//  }
-//
-//  // all data from mega will go directly to software
-//  if (altSerial.available() && !isCodeScanned) {
-//    Serial.println(altSerial.readString());
-//  }
+  if (isCodeScanned) {
+//    char str[128];
+//    strcpy(str, "QR:");
+//    strcat(str, data);
+//    Serial.println(str);
+//    str[0] = '\0';
+//    data[0] = '\0';
+//    idx = 0;
+    
+    altSerial.println("proceed");
+
+    // Do not proceed until software response
+    while (!Serial.available());
+    String response = Serial.readString();
+    Serial.println(response);
+
+    // Send response to mega
+    altSerial.print(response);
+
+    isCodeScanned = !isCodeScanned;
+  }
+
+  // all data from mega will go directly to software
+  if (altSerial.available() && !isCodeScanned) {
+    Serial.println(altSerial.readString());
+  }
 }
