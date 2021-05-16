@@ -35,7 +35,7 @@ String unoData;
 void setup() {
   //****************************************Serials
   // For software communication
-  Serial.begin(9600);
+  Serial.begin(115200);
   // For arduino uno communication
   altSerial.begin(38400);
 
@@ -53,8 +53,6 @@ void setup() {
   //****************************************
   delay(1000);
   display.clear();
-
-  Serial.println("start");
 }
 
 char data[256];
