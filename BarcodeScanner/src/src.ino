@@ -42,51 +42,66 @@ void KbdRptParser::OnKeyDown(uint8_t mod, uint8_t key) {
     OnKeyPressed(c);
 }
 
+char temp[256];
+char* tempPtr;
+
 void KbdRptParser::OnKeyPressed(uint8_t key) {
-  if (key == 13) {
-    data[idx] = '\0';
+  if (key == 13) {    
+    tempPtr = temp;
+    String str;    
+    for(int i = 0; i <= idx; i++){
+      str += *(tempPtr + i);
+    }
+
+    Serial.println("QR:" + str);
+
+    memset(temp, 0, sizeof temp);
     idx = 0;
     isCodeScanned = true;
-    Serial.println("Scanned");
   }
-  data[idx++] = (char)key;
+
+  temp[idx++] = (char)key;
 }
 
 void setup() {
   // Need to be initialize first before altSoftSerial
   Usb.Init();
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   altSerial.begin(38400);
 
   Hid.SetReportParser(0, (HIDReportParser*)&Prs);
+
+  Serial.println("start");
 }
 
 void loop() {
   Usb.Task();
 
-  if (isCodeScanned) {
-    Serial.print("QR:");
-    Serial.println(data);
-    data[0] = '\0';
-    idx = 0;
-
-    altSerial.println("proceed");
-
-    // Do not proceed until software response
-    while (!Serial.available());
-    String response = Serial.readString();
-    Serial.println(response);
-
-    // Send response to mega
-    altSerial.print(response);
-
-    isCodeScanned = !isCodeScanned;
-  }
-
-  // all data from mega will go directly to software
-  if (altSerial.available() && !isCodeScanned) {
-    Serial.print("string attempt:");
-    Serial.println(altSerial.readString());
-  }
+//  if (isCodeScanned) {
+////    char str[128];
+////    strcpy(str, "QR:");
+////    strcat(str, data);
+////    Serial.println(str);
+////    str[0] = '\0';
+////    data[0] = '\0';
+////    idx = 0;
+//    
+//    altSerial.println("proceed");
+//
+//    // Do not proceed until software response
+//    while (!Serial.available());
+//    String response = Serial.readString();
+//    Serial.println(response);
+//
+//    // Send response to mega
+//    altSerial.print(response);
+//
+//    isCodeScanned = !isCodeScanned;
+//  }
+//
+//  // all data from mega will go directly to software
+//  if (altSerial.available() && !isCodeScanned) {
+//    Serial.println(altSerial.readString());
+//  }
 }
